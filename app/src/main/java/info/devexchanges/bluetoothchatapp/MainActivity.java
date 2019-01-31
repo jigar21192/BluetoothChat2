@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,16 +32,19 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private Dialog dialog;
     private TextInputLayout inputLayout;
-    private ArrayAdapter<String> chatAdapter;
-    private ArrayList<String> chatMessages;
+   // private ArrayAdapter<String> chatAdapter;
+    B_Chat_Adapter chatAdapter;
+   // private ArrayList<String> chatMessages;
+   private List<DataModel> chatMessages = new ArrayList<>();
     private BluetoothAdapter bluetoothAdapter;
-
+    DataModel model;
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_OBJECT = 4;
     public static final int MESSAGE_TOAST = 5;
     public static final String DEVICE_OBJECT = "device_name";
+
 
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private ChatController chatController;
@@ -53,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         findViewsByIds();
+
 
         //check device support bluetooth or not
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -70,9 +75,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //set chat adapter
-        chatMessages = new ArrayList<>();
-        chatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, chatMessages);
+
+
+
+
+        chatAdapter=new B_Chat_Adapter(MainActivity.this,chatMessages);
         listView.setAdapter(chatAdapter);
+
+        /*chatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, chatMessages);
+        listView.setAdapter(chatAdapter);*/
     }
 
     private Handler handler = new Handler(new Handler.Callback() {
@@ -100,15 +111,28 @@ public class MainActivity extends AppCompatActivity {
                     byte[] writeBuf = (byte[]) msg.obj;
 
                     String writeMessage = new String(writeBuf);
-                    chatMessages.add("Me: " + writeMessage);
+                  //  chatMessages.add("Me: " + writeMessage);
+                    model=new DataModel();
+                    model.setTag("1");
+                    model.setMessage("You: " + writeMessage);
+
                     chatAdapter.notifyDataSetChanged();
+                    chatMessages.add(model);
+
+
                     break;
                 case MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
 
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    chatMessages.add(connectingDevice.getName() + ":  " + readMessage);
+                   //  chatMessages.add(connectingDevice.getName() + ":  " + readMessage);
+                    model=new DataModel();
+                    model.setTag("2");
+                    model.setMessage(connectingDevice.getName() + ":  " + readMessage);
+
                     chatAdapter.notifyDataSetChanged();
+                    chatMessages.add(model);
+
                     break;
                 case MESSAGE_DEVICE_OBJECT:
                     connectingDevice = msg.getData().getParcelable(DEVICE_OBJECT);
@@ -119,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), msg.getData().getString("toast"),
                             Toast.LENGTH_SHORT).show();
                     break;
+
             }
             return false;
         }
